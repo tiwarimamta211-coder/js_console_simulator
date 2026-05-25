@@ -1,0 +1,493 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;700;800&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --green:#00ff88;--amber:#ffb347;--red:#ff5f56;--blue:#5af;--cyan:#7df9ff;--purple:#bf9fff;
+    --bg:#0d0d0d;--surface:#161616;--surface2:#1e1e1e;--surface3:#252525;
+    --border:#2a2a2a;--border2:#333;--text:#e8e8e8;--muted:#666;--dim:#444;
+  }
+  body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:42px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+  .topbar-left{display:flex;align-items:center;gap:12px;}
+  .dots{display:flex;gap:6px;}
+  .dot{width:12px;height:12px;border-radius:50%;}
+  .dot-r{background:#ff5f56;}.dot-y{background:#ffbd2e;}.dot-g{background:#27c93f;}
+  .title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;}
+  .topbar-right{display:flex;gap:6px;}
+  .btn-sm{font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 10px;border-radius:4px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer;transition:all 0.15s;}
+  .btn-sm:hover{color:var(--text);border-color:var(--dim);}
+  .btn-sm.active{background:var(--surface3);color:var(--green);border-color:var(--green);}
+
+  .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;gap:2px;flex-shrink:0;}
+  .tab{font-size:12px;padding:8px 16px;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all 0.15s;user-select:none;}
+  .tab.active{color:var(--text);border-color:var(--green);}
+  .tab:hover:not(.active){color:var(--text);}
+
+  .main{display:flex;flex:1;overflow:hidden;}
+  .sidebar{width:220px;border-right:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;flex-shrink:0;}
+  .sidebar-section{padding:12px 16px 8px;font-size:10px;font-weight:700;color:var(--muted);letter-spacing:0.12em;text-transform:uppercase;}
+  .sidebar-item{display:flex;align-items:center;justify-content:space-between;padding:6px 16px;font-size:12px;cursor:pointer;color:var(--dim);transition:all 0.12s;}
+  .sidebar-item:hover{background:var(--surface2);color:var(--text);}
+  .sidebar-item.active{background:var(--surface3);color:var(--green);}
+  .sidebar-item code{font-size:11px;background:var(--surface3);padding:1px 5px;border-radius:3px;color:var(--cyan);}
+  .badge{font-size:9px;background:var(--surface3);padding:1px 6px;border-radius:10px;color:var(--muted);}
+
+  .console-area{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+  .output-wrap{flex:1;overflow-y:auto;padding:12px 0;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+  .output-wrap::-webkit-scrollbar{width:4px;}
+  .output-wrap::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+  .log-entry{display:flex;padding:3px 16px;font-size:13px;line-height:1.6;border-bottom:1px solid transparent;position:relative;align-items:flex-start;gap:10px;}
+  .log-entry:hover{background:rgba(255,255,255,0.02);}
+  .log-entry.log{color:var(--text);}
+  .log-entry.info{color:var(--cyan);background:rgba(90,170,255,0.03);border-left:2px solid var(--blue);}
+  .log-entry.warn{color:var(--amber);background:rgba(255,179,71,0.06);border-left:2px solid var(--amber);}
+  .log-entry.error{color:var(--red);background:rgba(255,95,86,0.07);border-left:2px solid var(--red);}
+  .log-entry.success{color:var(--green);}
+  .log-entry.group-head{color:#aaa;font-weight:500;}
+  .log-entry.group-item{padding-left:36px;color:var(--muted);}
+  .log-entry.table-entry{padding:4px 16px;}
+  .log-entry.dir-entry{color:var(--purple);}
+  .log-entry.assert-fail{color:var(--red);background:rgba(255,95,86,0.07);}
+  .log-entry.user-input{color:#888;padding-top:8px;padding-bottom:2px;}
+  .log-entry.separator{border-top:1px solid var(--border);margin:4px 0;}
+
+  .log-icon{flex-shrink:0;font-size:14px;margin-top:2px;width:16px;text-align:center;}
+  .log-text{flex:1;word-break:break-all;white-space:pre-wrap;}
+  .log-count{flex-shrink:0;font-size:10px;background:var(--surface3);padding:1px 6px;border-radius:10px;color:var(--muted);margin-top:3px;}
+  .log-time{flex-shrink:0;font-size:10px;color:var(--dim);margin-top:3px;}
+
+  .type-string{color:#98c379;}
+  .type-number{color:#e5c07b;}
+  .type-bool{color:#c678dd;}
+  .type-null{color:#7a8090;}
+  .type-undefined{color:#7a8090;}
+  .type-func{color:#61afef;}
+  .type-arr{color:#56b6c2;}
+  .type-obj{color:var(--purple);}
+  .type-key{color:#e06c75;}
+
+  .prompt-bar{border-top:1px solid var(--border);background:var(--surface);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  .prompt-arrow{color:var(--green);font-weight:700;font-size:14px;flex-shrink:0;}
+  .prompt-input{flex:1;background:transparent;border:none;outline:none;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);caret-color:var(--green);}
+  .prompt-input::placeholder{color:var(--dim);}
+
+  .statusbar{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:24px;background:var(--surface);border-top:1px solid var(--border);font-size:11px;color:var(--muted);flex-shrink:0;}
+  .status-right{display:flex;gap:16px;}
+  .status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:5px;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+  .console-table{border-collapse:collapse;font-size:12px;width:100%;margin:4px 0;}
+  .console-table th{background:var(--surface3);color:var(--cyan);padding:4px 10px;text-align:left;border:1px solid var(--border2);font-weight:500;}
+  .console-table td{padding:4px 10px;border:1px solid var(--border);color:var(--text);}
+  .console-table tr:nth-child(even) td{background:rgba(255,255,255,0.02);}
+
+  .expand-btn{font-size:11px;color:var(--blue);cursor:pointer;margin-left:4px;text-decoration:none;}
+  .expand-btn:hover{color:var(--cyan);}
+
+  .filter-bar{display:flex;align-items:center;gap:8px;padding:6px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;}
+  .filter-input{background:var(--surface2);border:1px solid var(--border2);border-radius:4px;padding:4px 10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);outline:none;width:200px;}
+  .filter-input:focus{border-color:var(--dim);}
+  .filter-input::placeholder{color:var(--dim);}
+  .filter-btns{display:flex;gap:4px;margin-left:auto;}
+  .filter-btn{font-size:11px;padding:3px 8px;border-radius:3px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all 0.12s;}
+  .filter-btn:hover,.filter-btn.on{color:var(--text);}
+  .filter-btn.on.f-all{border-color:var(--dim);}
+  .filter-btn.on.f-log{border-color:var(--text);color:var(--text);}
+  .filter-btn.on.f-info{border-color:var(--blue);color:var(--blue);}
+  .filter-btn.on.f-warn{border-color:var(--amber);color:var(--amber);}
+  .filter-btn.on.f-err{border-color:var(--red);color:var(--red);}
+  .filter-btn.on.f-suc{border-color:var(--green);color:var(--green);}
+
+  .snippet-area{padding:12px 16px;overflow-y:auto;height:100%;}
+  .snippet-card{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;margin-bottom:10px;overflow:hidden;}
+  .snippet-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface3);font-size:12px;}
+  .snippet-title{color:var(--cyan);font-weight:500;}
+  .snippet-run{font-size:11px;padding:2px 8px;border-radius:3px;border:1px solid var(--border2);background:transparent;color:var(--green);cursor:pointer;font-family:'JetBrains Mono',monospace;}
+  .snippet-run:hover{background:rgba(0,255,136,0.08);}
+  .snippet-code{padding:10px 12px;font-size:12px;color:#aaa;line-height:1.6;}
+  .kw{color:#c678dd;}.fn{color:#61afef;}.str{color:#98c379;}.num{color:#e5c07b;}.cm{color:#5c6370;font-style:italic;}
+
+  @media(max-width:700px){
+    .sidebar{display:none;}
+    .filter-input{width:120px;}
+  }
+</style>
+
+<h2 class="sr-only">Interactive JavaScript Console Simulator with full logging, evaluation, and built-in snippet runner</h2>
+
+<div style="display:flex;flex-direction:column;height:100vh;min-height:560px;">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="title">DevTools — Console</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-sm" id="btn-clear" title="Clear console">Clear</button>
+      <button class="btn-sm active" id="btn-live">● Live</button>
+      <button class="btn-sm" id="btn-preserve">Preserve log</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="console">Console</div>
+    <div class="tab" data-tab="snippets">Snippets</div>
+    <div class="tab" data-tab="help">API</div>
+  </div>
+
+  <div class="main">
+    <div class="sidebar">
+      <div class="sidebar-section">Quick Run</div>
+      <div class="sidebar-item" data-snippet="console.log('Hello, World!')">console.log <code>log</code></div>
+      <div class="sidebar-item" data-snippet="console.warn('Warning!')">console.warn <code>warn</code></div>
+      <div class="sidebar-item" data-snippet="console.error('Oops!')">console.error <code>err</code></div>
+      <div class="sidebar-item" data-snippet="console.info('Info msg')">console.info <code>info</code></div>
+      <div class="sidebar-item" data-snippet="console.table([{a:1,b:2},{a:3,b:4}])">console.table <code>tbl</code></div>
+      <div class="sidebar-item" data-snippet="console.group('Group'); console.log('item 1'); console.log('item 2'); console.groupEnd()">console.group</div>
+      <div class="sidebar-item" data-snippet="console.time('t1'); for(let i=0;i<1e6;i++){} console.timeEnd('t1')">console.time</div>
+      <div class="sidebar-item" data-snippet="console.count('hits'); console.count('hits'); console.count('hits')">console.count</div>
+      <div class="sidebar-item" data-snippet="console.assert(1===2,'Assert failed!')">console.assert</div>
+      <div class="sidebar-item" data-snippet="console.dir({name:'JS',type:'lang',version:2024})">console.dir</div>
+      <div class="sidebar-item" data-snippet="console.trace('Trace called')">console.trace</div>
+      <div class="sidebar-item" data-snippet="console.clear()">console.clear</div>
+
+      <div class="sidebar-section" style="margin-top:8px;">Extras</div>
+      <div class="sidebar-item" data-snippet="[1,2,3].map(x=>x*2)">Array.map</div>
+      <div class="sidebar-item" data-snippet="({x:10,y:20})">Object literal</div>
+      <div class="sidebar-item" data-snippet="new Promise(r=>r(42)).then(v=>console.log('Promise:',v))">Promise</div>
+      <div class="sidebar-item" data-snippet="JSON.stringify({name:'World',n:42},null,2)">JSON.stringify</div>
+      <div class="sidebar-item" data-snippet="Math.random().toFixed(4)">Math.random</div>
+      <div class="sidebar-item" data-snippet="new Date().toISOString()">Date.now</div>
+    </div>
+
+    <div class="console-area" id="tab-console">
+      <div class="filter-bar">
+        <input class="filter-input" id="filter-text" placeholder="Filter output..." />
+        <div class="filter-btns">
+          <button class="filter-btn f-all on" data-f="all">All</button>
+          <button class="filter-btn f-log" data-f="log">Log</button>
+          <button class="filter-btn f-info" data-f="info">Info</button>
+          <button class="filter-btn f-warn" data-f="warn">Warn</button>
+          <button class="filter-btn f-err" data-f="err">Error</button>
+        </div>
+      </div>
+      <div class="output-wrap" id="output"></div>
+      <div class="prompt-bar">
+        <span class="prompt-arrow">&gt;</span>
+        <input class="prompt-input" id="repl" placeholder="Enter JavaScript and press Enter..." autocomplete="off" spellcheck="false" />
+      </div>
+    </div>
+
+    <div class="console-area" id="tab-snippets" style="display:none;">
+      <div class="snippet-area" id="snippets-pane"></div>
+    </div>
+
+    <div class="console-area" id="tab-help" style="display:none;overflow-y:auto;padding:16px;">
+    </div>
+  </div>
+
+  <div class="statusbar">
+    <span><span class="status-dot"></span>JS Console Simulator</span>
+    <div class="status-right">
+      <span id="status-count">0 messages</span>
+      <span id="status-errors" style="color:var(--red);display:none">0 errors</span>
+      <span id="status-warns" style="color:var(--amber);display:none">0 warnings</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const output=document.getElementById('output');
+  const repl=document.getElementById('repl');
+  const filterText=document.getElementById('filter-text');
+
+  let history=[];let histIdx=-1;
+  let counts={};let timers={};
+  let groupDepth=0;
+  let preserveLog=false;
+  let logs=[];
+  let filterMode='all';
+  let filterStr='';
+  let errCount=0;let warnCount=0;
+
+  function formatVal(v,depth=0){
+    if(v===null)return`<span class="type-null">null</span>`;
+    if(v===undefined)return`<span class="type-undefined">undefined</span>`;
+    if(typeof v==='string')return`<span class="type-string">"${esc(v)}"</span>`;
+    if(typeof v==='number')return`<span class="type-number">${v}</span>`;
+    if(typeof v==='boolean')return`<span class="type-bool">${v}</span>`;
+    if(typeof v==='function')return`<span class="type-func">ƒ ${esc(v.name||'anonymous')}()</span>`;
+    if(Array.isArray(v)){
+      if(depth>1)return`<span class="type-arr">[…]</span>`;
+      const items=v.slice(0,8).map(i=>formatVal(i,depth+1));
+      const more=v.length>8?`, <span style="color:var(--muted)">+${v.length-8} more</span>`:'';
+      return`<span class="type-arr">[</span>${items.join('<span style="color:#666">, </span>')}${more}<span class="type-arr">]</span>`;
+    }
+    if(typeof v==='object'){
+      if(depth>1)return`<span class="type-obj">{…}</span>`;
+      try{
+        const keys=Object.keys(v).slice(0,6);
+        const pairs=keys.map(k=>`<span class="type-key">${esc(k)}</span>: ${formatVal(v[k],depth+1)}`);
+        const more=Object.keys(v).length>6?` <span style="color:var(--muted)">+${Object.keys(v).length-6}</span>`:'';
+        return`<span class="type-obj">{</span> ${pairs.join('<span style="color:#666">, </span>')}${more} <span class="type-obj">}</span>`;
+      }catch(e){return`<span class="type-obj">[Object]</span>`;}
+    }
+    return`<span>${esc(String(v))}</span>`;
+  }
+
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  function addEntry(type,html,raw=''){
+    const entry={type,html,raw,time:new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'})};
+    logs.push(entry);
+    renderEntry(entry);
+    updateStatus();
+  }
+
+  function renderEntry(entry){
+    if(!matchesFilter(entry))return;
+    const el=document.createElement('div');
+    el.className=`log-entry ${entry.type}`;
+    el.dataset.type=entry.type;
+    el.dataset.raw=entry.raw;
+
+    let icon='';
+    if(entry.type==='warn')icon='⚠';
+    else if(entry.type==='error')icon='✖';
+    else if(entry.type==='info')icon='ℹ';
+    else if(entry.type==='success')icon='✔';
+    else if(entry.type==='user-input')icon='›';
+    else if(entry.type==='assert-fail')icon='✖';
+    else if(entry.type==='dir-entry')icon='◈';
+    else if(entry.type==='group-head')icon='▸';
+    else icon='·';
+
+    el.innerHTML=`<span class="log-icon" aria-hidden="true">${icon}</span><span class="log-text">${entry.html}</span><span class="log-time">${entry.time}</span>`;
+    output.appendChild(el);
+    output.scrollTop=output.scrollHeight;
+  }
+
+  function matchesFilter(entry){
+    if(filterStr&&!entry.raw.toLowerCase().includes(filterStr.toLowerCase())&&!entry.html.toLowerCase().includes(filterStr.toLowerCase()))return false;
+    if(filterMode==='all')return true;
+    if(filterMode==='log')return['log','success','user-input','group-head','group-item','table-entry','dir-entry'].includes(entry.type);
+    if(filterMode==='info')return entry.type==='info';
+    if(filterMode==='warn')return entry.type==='warn';
+    if(filterMode==='err')return['error','assert-fail'].includes(entry.type);
+    return true;
+  }
+
+  function rerender(){
+    output.innerHTML='';
+    logs.forEach(e=>renderEntry(e));
+  }
+
+  function updateStatus(){
+    errCount=logs.filter(l=>['error','assert-fail'].includes(l.type)).length;
+    warnCount=logs.filter(l=>l.type==='warn').length;
+    document.getElementById('status-count').textContent=`${logs.length} messages`;
+    const se=document.getElementById('status-errors');
+    const sw=document.getElementById('status-warns');
+    if(errCount>0){se.textContent=`${errCount} error${errCount>1?'s':''}`;se.style.display='';}else{se.style.display='none';}
+    if(warnCount>0){sw.textContent=`${warnCount} warning${warnCount>1?'s':''}`;sw.style.display='';}else{sw.style.display='none';}
+  }
+
+  const sandboxConsole={
+    log:(...args)=>{addEntry('log',args.map(a=>formatVal(a)).join(' '),args.map(a=>String(a)).join(' '));},
+    warn:(...args)=>{addEntry('warn',args.map(a=>formatVal(a)).join(' '),args.map(a=>String(a)).join(' '));},
+    error:(...args)=>{addEntry('error',args.map(a=>formatVal(a)).join(' '),args.map(a=>String(a)).join(' '));},
+    info:(...args)=>{addEntry('info',args.map(a=>formatVal(a)).join(' '),args.map(a=>String(a)).join(' '));},
+    dir:(obj)=>{
+      const txt=`<span style="color:var(--muted)">console.dir &rarr;</span> ${formatVal(obj)}`;
+      addEntry('dir-entry',txt,JSON.stringify(obj));
+    },
+    table:(data)=>{
+      if(!Array.isArray(data)&&typeof data!=='object'){addEntry('log',formatVal(data),String(data));return;}
+      const rows=Array.isArray(data)?data:Object.entries(data).map(([k,v])=>({key:k,...(typeof v==='object'?v:{value:v})}) );
+      const cols=['(index)',...new Set(rows.flatMap(r=>Object.keys(r)))];
+      let t=`<div class="log-entry table-entry"><table class="console-table"><thead><tr>${cols.map(c=>`<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>`;
+      rows.forEach((r,i)=>{t+=`<tr><td>${i}</td>${cols.slice(1).map(c=>`<td>${r[c]!==undefined?esc(String(r[c])):''}</td>`).join('')}</tr>`;});
+      t+=`</tbody></table></div>`;
+      const entry={type:'table-entry',html:t,raw:'table',time:new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'})};
+      logs.push(entry);
+      if(matchesFilter(entry)){
+        const el=document.createElement('div');
+        el.innerHTML=t;
+        output.appendChild(el.firstChild);
+        output.scrollTop=output.scrollHeight;
+      }
+      updateStatus();
+    },
+    group:(label='group')=>{
+      addEntry('group-head',`<span style="color:var(--cyan)">▸ ${esc(label)}</span>`,label);
+      groupDepth++;
+    },
+    groupCollapsed:(label='group')=>{sandboxConsole.group(label);},
+    groupEnd:()=>{if(groupDepth>0)groupDepth--;},
+    time:(label='default')=>{timers[label]=performance.now();},
+    timeEnd:(label='default')=>{
+      if(timers[label]!==undefined){
+        const ms=(performance.now()-timers[label]).toFixed(3);
+        addEntry('log',`<span style="color:var(--cyan)">${esc(label)}</span>: <span class="type-number">${ms}ms</span>`,`${label}: ${ms}ms`);
+        delete timers[label];
+      }else{addEntry('warn',`Timer '${esc(label)}' does not exist`,label);}
+    },
+    timeLog:(label='default')=>{
+      if(timers[label]!==undefined){
+        const ms=(performance.now()-timers[label]).toFixed(3);
+        addEntry('log',`<span style="color:var(--cyan)">${esc(label)}</span>: <span class="type-number">${ms}ms</span>`,`${label}: ${ms}ms`);
+      }
+    },
+    count:(label='default')=>{
+      counts[label]=(counts[label]||0)+1;
+      addEntry('log',`<span style="color:var(--cyan)">${esc(label)}</span>: <span class="type-number">${counts[label]}</span>`,`${label}: ${counts[label]}`);
+    },
+    countReset:(label='default')=>{counts[label]=0;addEntry('log',`<span style="color:var(--muted)">${esc(label)}: 0 (reset)</span>`,`${label}: 0`);},
+    assert:(cond,...args)=>{
+      if(!cond){
+        const msg=args.length?args.map(a=>formatVal(a)).join(' '):'Assertion failed';
+        addEntry('assert-fail',`<span style="color:var(--red)">Assertion failed: </span>${msg}`,`Assertion failed`);
+      }
+    },
+    trace:(msg='Trace')=>{
+      const stack=new Error().stack||'';
+      addEntry('log',`<span style="color:var(--purple)">${esc(String(msg))}</span>\n<span style="color:var(--dim);font-size:11px">${esc(stack.split('\n').slice(2,5).join('\n'))}</span>`,String(msg));
+    },
+    clear:()=>{logs=[];errCount=0;warnCount=0;output.innerHTML='';updateStatus();addEntry('log','<span style="color:var(--muted)">Console was cleared</span>','cleared');}
+  };
+
+  function evalCode(code){
+    addEntry('user-input',`<span style="color:#555">&gt; </span><span style="color:#aaa">${esc(code)}</span>`,code);
+    try{
+      const fn=new Function('console',`"use strict";\nreturn (${code})`);
+      let result;
+      try{result=fn(sandboxConsole);}catch(e){
+        const fn2=new Function('console',`"use strict";\n${code}`);
+        result=fn2(sandboxConsole);
+      }
+      if(result!==undefined){
+        addEntry('success',formatVal(result),String(result));
+      }
+    }catch(e){
+      addEntry('error',`<span class="type-func">Uncaught</span> ${esc(e.toString())}`,e.toString());
+    }
+  }
+
+  repl.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&repl.value.trim()){
+      const code=repl.value;
+      history.unshift(code);
+      if(history.length>50)history.pop();
+      histIdx=-1;
+      repl.value='';
+      evalCode(code);
+    }
+    if(e.key==='ArrowUp'){e.preventDefault();if(histIdx<history.length-1){histIdx++;repl.value=history[histIdx]||'';}}
+    if(e.key==='ArrowDown'){e.preventDefault();if(histIdx>0){histIdx--;repl.value=history[histIdx]||'';}else{histIdx=-1;repl.value='';}}
+    if(e.key==='l'&&e.ctrlKey){e.preventDefault();sandboxConsole.clear();}
+  });
+
+  document.getElementById('btn-clear').addEventListener('click',()=>sandboxConsole.clear());
+  document.getElementById('btn-preserve').addEventListener('click',function(){preserveLog=!preserveLog;this.classList.toggle('active',preserveLog);});
+  document.getElementById('btn-live').addEventListener('click',function(){this.classList.toggle('active');});
+
+  filterText.addEventListener('input',function(){filterStr=this.value;rerender();});
+
+  document.querySelectorAll('.filter-btn').forEach(btn=>{
+    btn.addEventListener('click',function(){
+      document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('on'));
+      this.classList.add('on');
+      filterMode=this.dataset.f;
+      rerender();
+    });
+  });
+
+  document.querySelectorAll('.sidebar-item[data-snippet]').forEach(item=>{
+    item.addEventListener('click',function(){
+      repl.value=this.dataset.snippet;
+      repl.focus();
+    });
+  });
+
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',function(){
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      this.classList.add('active');
+      const which=this.dataset.tab;
+      document.getElementById('tab-console').style.display=which==='console'?'flex':'none';
+      document.getElementById('tab-snippets').style.display=which==='snippets'?'flex':'none';
+      document.getElementById('tab-help').style.display=which==='help'?'flex':'none';
+    });
+  });
+
+  const snippets=[
+    {title:'Array methods',code:`<span class="kw">const</span> nums = [<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>,<span class="num">4</span>,<span class="num">5</span>];\nconsole.<span class="fn">log</span>(nums.<span class="fn">filter</span>(x => x % <span class="num">2</span> === <span class="num">0</span>));\nconsole.<span class="fn">log</span>(nums.<span class="fn">reduce</span>((a, b) => a + b, <span class="num">0</span>));`,raw:`const nums=[1,2,3,4,5];console.log(nums.filter(x=>x%2===0));console.log(nums.reduce((a,b)=>a+b,0));`},
+    {title:'Object destructuring',code:`<span class="kw">const</span> person = { <span class="str">name</span>: <span class="str">'Mamta'</span>, age: <span class="num">28</span>, city: <span class="str">'Raipur'</span> };\n<span class="kw">const</span> { name, ...rest } = person;\nconsole.<span class="fn">log</span>(name, rest);`,raw:`const person={name:'Mamta',age:28,city:'Raipur'};const{name,...rest}=person;console.log(name,rest);`},
+    {title:'Async/Await simulation',code:`<span class="kw">async function</span> <span class="fn">fetchData</span>() {\n  <span class="kw">const</span> result = <span class="kw">await</span> <span class="kw">new</span> Promise(r => setTimeout(() => r(<span class="str">'Data loaded!'</span>), <span class="num">100</span>));\n  console.<span class="fn">log</span>(result);\n}\n<span class="fn">fetchData</span>();`,raw:`async function fetchData(){const result=await new Promise(r=>setTimeout(()=>r('Data loaded!'),100));console.log(result);}fetchData();`},
+    {title:'Performance timer',code:`console.<span class="fn">time</span>(<span class="str">'sort'</span>);\n<span class="kw">const</span> arr = Array.<span class="fn">from</span>({length:<span class="num">10000</span>},()=>Math.<span class="fn">random</span>()).<span class="fn">sort</span>();\nconsole.<span class="fn">timeEnd</span>(<span class="str">'sort'</span>);\nconsole.<span class="fn">log</span>(<span class="str">'Sorted'</span>, arr.length, <span class="str">'items'</span>);`,raw:`console.time('sort');const arr=Array.from({length:10000},()=>Math.random()).sort();console.timeEnd('sort');console.log('Sorted',arr.length,'items');`},
+    {title:'Table display',code:`console.<span class="fn">table</span>([\n  { name: <span class="str">'GST'</span>, rate: <span class="num">18</span>, type: <span class="str">'Indirect'</span> },\n  { name: <span class="str">'TDS'</span>, rate: <span class="num">10</span>, type: <span class="str">'Direct'</span> },\n  { name: <span class="str">'ITR'</span>, rate: <span class="num">30</span>, type: <span class="str">'Direct'</span> }\n]);`,raw:`console.table([{name:'GST',rate:18,type:'Indirect'},{name:'TDS',rate:10,type:'Direct'},{name:'ITR',rate:30,type:'Direct'}]);`},
+    {title:'Error handling',code:`<span class="kw">try</span> {\n  <span class="kw">throw new</span> Error(<span class="str">'Something went wrong'</span>);\n} <span class="kw">catch</span>(e) {\n  console.<span class="fn">error</span>(e.message);\n  console.<span class="fn">warn</span>(<span class="str">'Recovered from error'</span>);\n}`,raw:`try{throw new Error('Something went wrong');}catch(e){console.error(e.message);console.warn('Recovered from error');}`},
+  ];
+
+  const sp=document.getElementById('snippets-pane');
+  snippets.forEach(s=>{
+    sp.innerHTML+=`<div class="snippet-card"><div class="snippet-header"><span class="snippet-title">${esc(s.title)}</span><button class="snippet-run" data-raw="${esc(s.raw)}">▶ Run</button></div><div class="snippet-code"><pre>${s.code}</pre></div></div>`;
+  });
+  sp.querySelectorAll('.snippet-run').forEach(btn=>{
+    btn.addEventListener('click',function(){
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelector('[data-tab="console"]').classList.add('active');
+      document.getElementById('tab-console').style.display='flex';
+      document.getElementById('tab-snippets').style.display='none';
+      document.getElementById('tab-help').style.display='none';
+      repl.value=this.dataset.raw;
+      repl.focus();
+    });
+  });
+
+  const helpPane=document.getElementById('tab-help');
+  const api=[
+    ['console.log(...args)','Output values to console','log'],
+    ['console.warn(...args)','Yellow warning message','warn'],
+    ['console.error(...args)','Red error message','error'],
+    ['console.info(...args)','Blue informational message','info'],
+    ['console.table(data)','Render array/object as table','table'],
+    ['console.dir(obj)','Display object properties','dir'],
+    ['console.group(label)','Start collapsible group','group'],
+    ['console.groupEnd()','End current group','groupEnd'],
+    ['console.time(label)','Start a named timer','time'],
+    ['console.timeEnd(label)','Stop timer and print ms','timeEnd'],
+    ['console.timeLog(label)','Log timer without stopping','timeLog'],
+    ['console.count(label)','Increment and log counter','count'],
+    ['console.countReset(label)','Reset counter to zero','countReset'],
+    ['console.assert(cond,...msg)','Log if condition is false','assert'],
+    ['console.trace(msg)','Print stack trace','trace'],
+    ['console.clear()','Clear console output','clear'],
+  ];
+  let h=`<div style="font-size:13px;">`;
+  h+=`<p style="color:var(--muted);margin-bottom:16px;line-height:1.6;font-size:12px;">Full console API reference. Click any method to insert into the REPL.</p>`;
+  api.forEach(([sig,desc,_])=>{
+    h+=`<div style="display:flex;align-items:flex-start;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;" class="api-row" data-sig="${esc(sig.replace(/\(.*\)/,'()'))}"><code style="color:var(--cyan);min-width:260px;font-size:12px;flex-shrink:0;">${esc(sig)}</code><span style="color:var(--muted);font-size:12px;">${esc(desc)}</span></div>`;
+  });
+  h+=`</div>`;
+  helpPane.innerHTML=h;
+  helpPane.querySelectorAll('.api-row').forEach(row=>{
+    row.addEventListener('click',function(){
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelector('[data-tab="console"]').classList.add('active');
+      document.getElementById('tab-console').style.display='flex';
+      document.getElementById('tab-snippets').style.display='none';
+      document.getElementById('tab-help').style.display='none';
+      repl.value=this.dataset.sig;
+      repl.focus();
+    });
+  });
+
+  evalCode(`console.log("Welcome to JS Console Simulator!")`);
+  evalCode(`console.info("Type any JavaScript and press Enter")`);
+  evalCode(`console.log({version: "ES2024", features: ["async/await", "modules", "optional chaining"]})`);
+  evalCode(`console.warn("Use the sidebar shortcuts or Snippets tab for quick examples")`);
+})();
+</script>
